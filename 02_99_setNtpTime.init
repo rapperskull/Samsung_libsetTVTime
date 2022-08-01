@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# © Copyright 2022, Rapper_skull@SamyGO
+#
+#
+. /dtv/SGO.env
+
+SODIR=$SYSROOT/opt/privateer/usr/libso
+NTPSERVER="0.pool.ntp.org"
+TIMEZONE="Etc/UTC"
+
+stop_bootloop()
+{
+	for USB in /dtv/usb/sd* ; do
+		echo "checking $USB"
+		[ -e $USB/STOP ] && echo "STOP found. Script exit..." && exit 1
+	done
+}
+
+case $1 in 
+	start)
+	stop_bootloop
+	[ "$LIBSO_DIR" ] && SODIR=$LIBSO_DIR
+  # Not tested beyond C series. Probably it doesn't work!
+  ntpclient -s -h "$NTPSERVER" -p 123
+  [ $? -eq 0 ] && [ $(pidof exeTV exeDSP) ] && samyGOso -d -A -B -l $SODIR/libsetTVTime.so "$TIMEZONE"
+	;;
+	stop)
+	;;
+	status)
+	[ -f "/dtv/setTVTime.log" ] && cat "/dtv/setTVTime.log" || echo "Not started"
+	;;
+	*)
+	echo "Usage: $0 {start|stop|status}" 1>&2
+	exit 0
+	;;
+esac
